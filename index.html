@@ -1,0 +1,133 @@
+<html>
+	<head>
+		<link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+		<script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/knockout/3.4.2/knockout-min.js" crossorigin="anonymous"></script>
+		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+	</head>
+
+	<body>
+		<p>OK</p>
+		<div id="mainDiv" class="container">
+			<div class="form-group">
+				<input class="btn btn-primary" type="button" value="Get All Organization PIPEDRIVE" onclick="Get_All_Organization_PIPEDRIVE()" />
+			</div>
+			<div class="form-group">
+				<input class="btn btn-primary" type="button" value="Add Organization PIPEDRIVE" onclick="Add_Organization_PIPEDRIVE()" />
+			</div>
+			<div class="form-group">
+				<label for="sel1">CRM List:</label>
+				  <select class="form-control" id="sel1">
+					<option>PIPEDRIVE</option>
+					<option>Sales Force</option>
+					<option>Nectar</option>
+					<option>VTiger</option>
+				  </select>
+				</div>
+			<div class="form-group">
+				<table class="table table-striped table-bordered hoverTable">
+					<thead>
+						<tr>
+							<th>Name</th>
+							<th>OwnerID</th>
+							<th>AddTime</th>
+							<th>VisibleTo</th>
+						</tr>
+					<thead>
+					<tbody data-bind="foreach: ListOrganizations()">
+						<tr>
+							<td>
+								<div data-bind="text: Name"></div>
+							</td>
+							<td>
+								<div data-bind="text: OwnerID"></div>
+							</td>
+							<td>
+								<div data-bind="text: AddTime"></div>
+							</td>
+							<td>
+								<div data-bind="text: VisibleTo"></div>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</body>
+	
+	<script type="text/javascript">
+		function Get_All_Organization_PIPEDRIVE()
+		{
+			viewModel.GetOrganizations();
+		}
+		
+		function Add_Organization_PIPEDRIVE()
+		{
+			$.ajax({
+				url: "http://localhost:3000/organization",
+				dataType: 'JSON',
+				type: "POST",
+				data: [],
+				success: function (res) {
+					var newOrg = new Organization(res.data);
+					viewModel.ListOrganizations.push(newOrg);
+				},
+				error: function (e) {
+					window.alert(e);
+				},
+				complete: function () {
+					//window.alert('completed');
+				}
+			});
+		}
+		
+		var viewModel;
+		
+		function Organization(data) {
+			var self = this;			
+			self.Name = ko.observable(data ? data.name : "");
+			self.OwnerID = ko.observable(data ? data.company_id : "");
+			self.AddTime = ko.observable(data ? data.update_time : "");
+			self.VisibleTo = ko.observable(data ? data.visible_to : "");
+		}
+		
+		var OrganizationViewModel = function () {
+			var self = this;
+			self.Token = ko.observable('e3686c7b77351639f744917ebc8a11b74c7ff6b4');
+			self.Name = ko.observable();
+			self.OwnerID = ko.observable();
+			self.AddTime = ko.observable(new Date());
+			self.VisibleTo = ko.observable();
+			self.ListOrganizations = ko.observableArray(new Array());
+			self.ListCRM = ko.observableArray(new Array());
+			self.GetOrganizations = function () {
+				$.ajax({
+					url: "http://localhost:3000/organization",
+					dataType: 'JSON',
+					type: "GET",
+					success: function (res) {
+						if (res.success === true)
+						{
+							var organizations = $.map(res.data, function (item) {
+								return new Organization(item)
+							});						
+							viewModel.ListOrganizations(organizations);
+						}
+					},
+					error: function (e) {
+						window.alert(e);
+					},
+					complete: function () {
+						//window.alert('completed');
+					}
+				});
+			};
+		}
+				
+		$(function() {
+			console.log( "ready!" );
+			viewModel = new OrganizationViewModel();
+			ko.applyBindings(viewModel, document.getElementById("mainDiv"));
+		});
+	</script>
+</html>
